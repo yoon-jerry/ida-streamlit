@@ -172,7 +172,7 @@ with col1:
     st.subheader("🚨 실시간 위험 알림")
     if alerts:
         alerts_df = pd.DataFrame(alerts)
-        styled_alerts = alerts_df.style.applymap(severity_color, subset=["심각도"])
+        styled_alerts = alerts_df.style.map(severity_color, subset=["심각도"])
         st.dataframe(styled_alerts, use_container_width=True, hide_index=True)
     else:
         st.success("위험 알림이 없습니다.")
@@ -182,8 +182,8 @@ with col2:
     if blacklist:
         bl_df = pd.DataFrame(blacklist)
         styled_bl = bl_df.style\
-            .applymap(score_color, subset=["점수"])\
-            .applymap(status_color, subset=["상태"])
+            .map(score_color, subset=["점수"])\
+            .map(status_color, subset=["상태"])
         st.dataframe(styled_bl, use_container_width=True, hide_index=True)
     else:
         st.success("블랙리스트 운전자가 없습니다.")
@@ -228,8 +228,8 @@ st.caption("행을 클릭하면 전·후 영상 클립을 확인할 수 있습�
 if events:
     events_df = pd.DataFrame(events)
     styled_events = events_df.style\
-        .applymap(danger_color, subset=["위험도"])\
-        .applymap(score_color, subset=["점수"])
+        .map(danger_color, subset=["위험도"])\
+        .map(score_color, subset=["점수"])
 
     selected_row = st.dataframe(
         styled_events, use_container_width=True, hide_index=True,
