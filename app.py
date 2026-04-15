@@ -44,18 +44,14 @@ if not is_logged_in():
 
             st.markdown("---")
             st.markdown("**데모 계정으로 빠른 로그인**")
-            col_a, col_b = st.columns(2)
-            with col_a:
-                if st.button("시스템 관리자", use_container_width=True):
-                    login("admin", "admin123"); st.rerun()
-                if st.button("제주렌터카", use_container_width=True):
-                    login("jejurent", "jeju123"); st.rerun()
-            with col_b:
-                if st.button("스카이렌터카", use_container_width=True):
-                    login("skyrent", "sky123"); st.rerun()
-                if st.button("스타렌터카", use_container_width=True):
-                    login("starrent", "star123"); st.rerun()
-
+            if st.button("🛡️ 시스템 관리자", use_container_width=True):
+                login("admin", "admin123"); st.rerun()
+            if st.button("🏢 스카이렌터카", use_container_width=True):
+                login("skyrent", "sky123"); st.rerun()
+            if st.button("🏢 제주렌터카", use_container_width=True):
+                login("jejurent", "jeju123"); st.rerun()
+            if st.button("🏢 스타렌터카", use_container_width=True):
+                login("starrent", "star123"); st.rerun()
 # ── 로그인 된 경우 ──
 else:
     render_sidebar()
