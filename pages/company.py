@@ -147,7 +147,6 @@ company_map = {"skyrent": "스카이렌터카", "jejurent": "제주렌터카", "
 st.title("🏢 Company Dashboard")
 
 if role == "admin":
-    # 어드민: 검색 + 드롭다운
     search_col, drop_col = st.columns([1, 2])
     with search_col:
         company_search = st.text_input("업체 검색", placeholder="업체명 입력...")
@@ -159,8 +158,8 @@ else:
     selected_company = company_map.get(get_company_id(), "스카이렌터카")
     st.markdown(f"**{get_company_name()}** 운행 현황")
 
-alerts  = alerts_data.get(selected_company, [])
-events  = company_events.get(selected_company, [])
+alerts    = alerts_data.get(selected_company, [])
+events    = company_events.get(selected_company, [])
 blacklist = blacklist_data.get(selected_company, [])
 
 st.divider()
@@ -194,7 +193,6 @@ with col2:
         k: v for k, v in blacklist_reports.items()
         if not search_query or search_query in v["이름"] or search_query in k
     }
-
     if filtered_reports:
         selected_license = st.selectbox(
             "운전자 선택",
@@ -239,22 +237,113 @@ if events:
     if selected_row and selected_row.selection.rows:
         idx = selected_row.selection.rows[0]
         ev = events[idx]
+
         with st.expander(f"🎬 전·후 영상 클립 — {ev['운전자']} ({ev['면허번호']}) | {ev['시간']}", expanded=True):
+
+            # 이벤트 정보 요약
+            i1, i2, i3, i4 = st.columns(4)
+            i1.metric("운전자",   ev["운전자"])
+            i2.metric("면허번호", ev["면허번호"])
+            i3.metric("이벤트",   ev["이벤트"])
+            i4.metric("점수",     f"{ev['점수']}점")
+
+            st.divider()
+
             col_v1, col_v2 = st.columns(2)
+
             with col_v1:
-                st.markdown("**이벤트 전 (30초)**")
-                st.info("📹 CAM-01 | 이벤트 발생 30초 전 영상")
-                st.caption(f"차량번호: {ev['차량번호']} | 시간: {ev['시간']}")
+                st.markdown("**📹 이벤트 전 (30초)**")
+                st.markdown(f"""
+                <div style='background:#1a1a2e; border-radius:10px; padding:32px 20px;
+                            text-align:center; border:1px solid #3a3a5c;'>
+                    <div style='font-size:2.5rem;'>▶</div>
+                    <div style='color:#8888bb; font-size:0.85rem; margin-top:8px;'>
+                        CAM-01 | 이벤트 발생 30초 전
+                    </div>
+                    <div style='color:#555588; font-size:0.75rem; margin-top:4px;'>
+                        {ev['시간']} | {ev['차량번호']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.caption("")
+                if st.button("▶ 이벤트 전 영상 재생", key="btn_before", use_container_width=True):
+                    st.session_state["video_modal"] = {"type": "before", "ev": ev}
+                    st.rerun()
+
             with col_v2:
-                st.markdown("**이벤트 후 (30초)**")
-                st.info("📹 CAM-01 | 이벤트 발생 30초 후 영상")
-                st.caption(f"이벤트: {ev['이벤트']} | 점수: {ev['점수']}점")
-            ec1, ec2, ec3 = st.columns(3)
-            ec1.metric("운전자", ev['운전자'])
-            ec2.metric("이벤트", ev['이벤트'])
-            ec3.metric("점수", f"{ev['점수']}점")
+                st.markdown("**📹 이벤트 후 (30초)**")
+                st.markdown(f"""
+                <div style='background:#2e1a1a; border-radius:10px; padding:32px 20px;
+                            text-align:center; border:1px solid #5c3a3a;'>
+                    <div style='font-size:2.5rem;'>▶</div>
+                    <div style='color:#bb8888; font-size:0.85rem; margin-top:8px;'>
+                        CAM-01 | 이벤트 발생 30초 후
+                    </div>
+                    <div style='color:#a32d2d; font-size:0.75rem; margin-top:4px;'>
+                        ⚠ {ev['이벤트']} 감지됨
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                st.caption("")
+                if st.button("▶ 이벤트 후 영상 재생", key="btn_after", use_container_width=True):
+                    st.session_state["video_modal"] = {"type": "after", "ev": ev}
+                    st.rerun()
+
+# ── 영상 플레이어 ──
+if st.session_state.get("video_modal"):
+    modal = st.session_state["video_modal"]
+    ev    = modal["ev"]
+    is_before = modal["type"] == "before"
+    clip_label = "이벤트 전 30초" if is_before else "이벤트 후 30초"
+    bg_color   = "#0d0d1a" if is_before else "#1a0d0d"
+    border_col = "#3a3a5c" if is_before else "#5c3a3a"
+    tag_color  = "#8888bb" if is_before else "#bb4444"
+
+    st.divider()
+    st.markdown(f"### 🎬 영상 플레이어 — {clip_label}")
+    st.markdown(f"**{ev['운전자']}** ({ev['면허번호']}) | {ev['차량번호']} | {ev['시간']}")
+
+    # 영상 화면
+    st.markdown(f"""
+    <div style='background:{bg_color}; border-radius:12px; border:1px solid {border_col}; overflow:hidden;'>
+        <div style='background:#000; aspect-ratio:16/9; display:flex; flex-direction:column;
+                    align-items:center; justify-content:center; gap:10px; min-height:240px;'>
+            <div style='font-size:4rem; opacity:0.35;'>📹</div>
+            <div style='color:#555; font-size:0.9rem;'>영상 준비 중입니다</div>
+            <div style='color:#444; font-size:0.75rem;'>FastAPI 서버 연동 후 실제 영상이 표시됩니다</div>
+        </div>
+        <div style='padding:10px 16px; display:flex; justify-content:space-between; align-items:center;'>
+            <span style='color:{tag_color}; font-size:0.8rem; font-weight:bold;'>● {clip_label}</span>
+            <span style='color:#555; font-size:0.8rem;'>CAM-01 | {ev['차량번호']}</span>
+        </div>
+        <div style='background:#222; height:4px; margin:0 16px 10px; border-radius:2px;'>
+            <div style='background:#534AB7; width:0%; height:100%; border-radius:2px;'></div>
+        </div>
+        <div style='padding:4px 16px 14px; display:flex; align-items:center; gap:16px;'>
+            <span style='color:#aaa; font-size:1.3rem; cursor:pointer;'>⏮</span>
+            <span style='background:#534AB7; border-radius:50%; width:34px; height:34px;
+                         display:inline-flex; align-items:center; justify-content:center;
+                         cursor:pointer; font-size:0.9rem;'>▶</span>
+            <span style='color:#aaa; font-size:1.3rem; cursor:pointer;'>⏭</span>
+            <span style='color:#555; font-size:0.8rem;'>00:00 / 00:30</span>
+            <span style='color:#555; font-size:0.8rem; margin-left:auto;'>속도: 1.0×</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.caption("")
+    p1, p2, p3 = st.columns(3)
+    p1.metric("이벤트", ev["이벤트"])
+    p2.metric("점수",   f"{ev['점수']}점")
+    p3.metric("위험도", ev["위험도"])
+
+    if st.button("✕ 플레이어 닫기", use_container_width=True):
+        st.session_state["video_modal"] = None
+        st.rerun()
+
 else:
-    st.success("위험 이벤트가 없습니다.")
+    if not events:
+        st.success("위험 이벤트가 없습니다.")
 
 st.divider()
 
